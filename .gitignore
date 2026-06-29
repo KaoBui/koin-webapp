@@ -26,11 +26,18 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
+!.env.example
 
 # vercel
 .vercel
 
+# claude code local settings (machine-specific permissions)
+.claude/settings.local.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
