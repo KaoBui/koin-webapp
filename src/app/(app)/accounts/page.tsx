@@ -12,7 +12,7 @@ export default async function AccountsPage() {
   const accounts = await getAccountsWithBalances(session.user.id);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="mx-auto max-w-6xl p-6 lg:p-10">
       <AccountManager accounts={accounts} />
     </div>
   );

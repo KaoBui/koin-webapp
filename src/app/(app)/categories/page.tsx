@@ -36,7 +36,7 @@ export default async function CategoriesPage() {
   }));
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="mx-auto max-w-5xl p-6 lg:p-10">
       <CategoryManager categories={items} />
     </div>
   );

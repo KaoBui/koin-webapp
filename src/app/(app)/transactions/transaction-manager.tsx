@@ -81,14 +81,14 @@ export function TransactionManager({
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-8 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Transactions</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-[-0.02em]">Transactions</h1>
+          <p className="mt-1 text-[15px] text-muted-foreground">
             Track your income and expenses.
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="rounded-full px-5">
           <PlusIcon />
           Add transaction
         </Button>
@@ -101,17 +101,17 @@ export function TransactionManager({
       />
 
       {transactions.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-10 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-2xl border bg-muted/60 p-12 text-center">
+          <p className="text-[15px] text-muted-foreground">
             No transactions for this month.
           </p>
-          <Button onClick={openCreate} className="mt-4">
+          <Button onClick={openCreate} className="mt-5 rounded-full px-5">
             <PlusIcon />
             Add your first transaction
           </Button>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
+        <div className="overflow-x-auto rounded-xl border">
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -156,11 +156,7 @@ export function TransactionManager({
                   <td
                     className={cn(
                       "whitespace-nowrap px-4 py-2.5 text-right font-medium tabular-nums",
-                      t.type === "INCOME"
-                        ? "text-green-600"
-                        : t.type === "EXPENSE"
-                          ? "text-red-600"
-                          : "text-foreground",
+                      t.type === "INCOME" && "text-[#1aae39]",
                     )}
                   >
                     {t.type === "INCOME" ? "+" : t.type === "EXPENSE" ? "-" : ""}
@@ -168,11 +164,11 @@ export function TransactionManager({
                   </td>
                   <td className="px-4 py-2.5">
                     {t.importSource === "ai_import" ? (
-                      <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-purple-700">
+                      <span className="rounded-full border border-[#d6b6f6] bg-[#d6b6f6]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#391c57]">
                         AI
                       </span>
                     ) : (
-                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                         Manual
                       </span>
                     )}
@@ -297,7 +293,7 @@ function TransactionFormDialog({
               className={cn(
                 "flex h-9 items-center justify-center rounded-md border text-sm font-medium transition",
                 type === "EXPENSE"
-                  ? "border-red-500 bg-red-50 text-red-700"
+                  ? "border-[#dd5b00] bg-[#dd5b00]/10 text-[#dd5b00]"
                   : "border-input hover:bg-accent",
               )}
               aria-pressed={type === "EXPENSE"}
@@ -310,7 +306,7 @@ function TransactionFormDialog({
               className={cn(
                 "flex h-9 items-center justify-center rounded-md border text-sm font-medium transition",
                 type === "INCOME"
-                  ? "border-green-500 bg-green-50 text-green-700"
+                  ? "border-[#1aae39] bg-[#1aae39]/10 text-[#1aae39]"
                   : "border-input hover:bg-accent",
               )}
               aria-pressed={type === "INCOME"}
@@ -411,7 +407,7 @@ function TransactionFormDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="rounded-full px-5">
               {isPending ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
@@ -481,6 +477,7 @@ function DeleteTransactionDialog({
             variant="destructive"
             onClick={handleDelete}
             disabled={isPending}
+            className="rounded-full px-5"
           >
             {isPending ? "Deleting…" : "Delete"}
           </Button>

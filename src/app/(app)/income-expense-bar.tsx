@@ -60,7 +60,7 @@ export function IncomeExpenseBar({ series }: { series: BarDatum[] }) {
       <CardContent>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e6e6e6" />
             <XAxis
               dataKey="label"
               tick={{ fontSize: 12 }}
@@ -79,8 +79,8 @@ export function IncomeExpenseBar({ series }: { series: BarDatum[] }) {
               cursor={{ fill: "rgba(0,0,0,0.04)" }}
             />
             <Legend />
-            <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="expense" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="income" name="Income" fill="#1aae39" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="expense" name="Expenses" fill="#dd5b00" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

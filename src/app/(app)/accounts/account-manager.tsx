@@ -45,31 +45,31 @@ export function AccountManager({ accounts }: { accounts: AccountWithBalance[] })
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-8 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Accounts</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-[-0.02em]">Accounts</h1>
+          <p className="mt-1 text-[15px] text-muted-foreground">
             Your checking, savings, credit and cash accounts.
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="rounded-full px-5">
           <PlusIcon />
           New account
         </Button>
       </div>
 
       {accounts.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-10 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-2xl border bg-muted/60 p-12 text-center">
+          <p className="text-[15px] text-muted-foreground">
             You don&apos;t have any accounts yet.
           </p>
-          <Button onClick={openCreate} className="mt-4">
+          <Button onClick={openCreate} className="mt-5 rounded-full px-5">
             <PlusIcon />
             Create your first account
           </Button>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
+        <div className="overflow-x-auto rounded-xl border">
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -91,14 +91,14 @@ export function AccountManager({ accounts }: { accounts: AccountWithBalance[] })
                     <span className="inline-flex items-center gap-2">
                       {account.name}
                       {account.isDefault && (
-                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                        <span className="rounded-full border bg-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
                           Default
                         </span>
                       )}
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
-                    <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                       {ACCOUNT_TYPE_LABELS[account.type]}
                     </span>
                   </td>
@@ -108,7 +108,7 @@ export function AccountManager({ accounts }: { accounts: AccountWithBalance[] })
                   <td
                     className={cn(
                       "whitespace-nowrap px-4 py-2.5 text-right font-medium tabular-nums",
-                      account.computedBalance < 0 && "text-red-600",
+                      account.computedBalance < 0 && "text-[#e5484d]",
                     )}
                   >
                     {formatBalance(account.computedBalance, account.currency)}
@@ -298,7 +298,7 @@ function AccountFormDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="rounded-full px-5">
               {isPending ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
@@ -378,6 +378,7 @@ function DeleteAccountDialog({
             variant="destructive"
             onClick={handleDelete}
             disabled={isPending}
+            className="rounded-full px-5"
           >
             {isPending ? "Deleting…" : "Delete"}
           </Button>

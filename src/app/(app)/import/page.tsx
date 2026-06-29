@@ -24,7 +24,7 @@ export default async function ImportPage() {
   ]);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="mx-auto max-w-6xl p-6 lg:p-10">
       <ImportClient categories={categories} accounts={accounts} />
     </div>
   );

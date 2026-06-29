@@ -77,7 +77,7 @@ export default async function TransactionsPage({
   }));
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="mx-auto max-w-6xl p-6 lg:p-10">
       <TransactionManager
         transactions={items}
         categories={categories}

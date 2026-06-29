@@ -57,7 +57,7 @@ export function BalanceLineChart({
       <CardContent>
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e6e6e6" />
             <XAxis
               dataKey="day"
               tick={{ fontSize: 12 }}
@@ -79,7 +79,7 @@ export function BalanceLineChart({
             <Line
               type="monotone"
               dataKey="balance"
-              stroke="#6366f1"
+              stroke="#0075de"
               strokeWidth={2}
               dot={false}
             />

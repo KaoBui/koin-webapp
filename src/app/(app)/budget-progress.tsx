@@ -54,7 +54,7 @@ export function BudgetProgress({
                     <span
                       className={cn(
                         "whitespace-nowrap tabular-nums",
-                        over ? "text-red-600" : "text-muted-foreground",
+                        over ? "text-[#e5484d]" : "text-muted-foreground",
                       )}
                     >
                       {eur.format(amount)} / {eur.format(b.limit)}
@@ -64,7 +64,7 @@ export function BudgetProgress({
                     <div
                       className={cn(
                         "h-full rounded-full transition-all",
-                        over ? "bg-red-500" : "bg-green-500",
+                        over ? "bg-[#e5484d]" : "bg-[#1aae39]",
                       )}
                       style={{ width: `${Math.min(pct, 100)}%` }}
                     />

@@ -240,11 +240,11 @@ export function ImportClient({
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-[-0.02em]">
           Import from screenshot
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-1 text-[15px] text-muted-foreground">
           Upload bank statement screenshots and let AI extract the transactions.
           Review and edit before saving.
         </p>
@@ -277,10 +277,10 @@ export function ImportClient({
             onDragLeave={() => setDragActive(false)}
             onDrop={onDrop}
             className={cn(
-              "flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-10 text-center transition-colors",
+              "flex flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-muted/40 p-12 text-center transition-colors",
               extracting
                 ? "pointer-events-none opacity-60"
-                : "cursor-pointer hover:bg-muted/40",
+                : "cursor-pointer hover:bg-muted/70",
               dragActive ? "border-primary bg-primary/5" : "border-input",
             )}
           >
@@ -350,6 +350,7 @@ export function ImportClient({
             <Button
               onClick={onExtract}
               disabled={images.length === 0 || extracting}
+              className="rounded-full px-5"
             >
               {extracting && <Spinner />}
               {extracting ? "Extracting…" : "Extract transactions"}
@@ -370,7 +371,7 @@ export function ImportClient({
             </div>
           )}
 
-          <div className="overflow-x-auto rounded-lg border">
+          <div className="overflow-x-auto rounded-xl border">
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
@@ -498,7 +499,11 @@ export function ImportClient({
           </div>
 
           <div className="mt-6 flex items-center gap-3">
-            <Button onClick={onSave} disabled={saving || selectedCount === 0}>
+            <Button
+              onClick={onSave}
+              disabled={saving || selectedCount === 0}
+              className="rounded-full px-5"
+            >
               {saving && <Spinner />}
               {saving
                 ? "Saving…"
@@ -506,7 +511,12 @@ export function ImportClient({
                     selectedCount === 1 ? "" : "s"
                   }`}
             </Button>
-            <Button variant="outline" onClick={reset} disabled={saving}>
+            <Button
+              variant="outline"
+              onClick={reset}
+              disabled={saving}
+              className="rounded-full px-5"
+            >
               Start over
             </Button>
           </div>

@@ -54,25 +54,27 @@ export function CategoryManager({
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-8 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-[-0.02em] text-foreground">
+            Categories
+          </h1>
+          <p className="mt-1 text-[15px] text-muted-foreground">
             Organise your spending and set optional monthly budgets.
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="rounded-full px-5">
           <PlusIcon />
           New category
         </Button>
       </div>
 
       {categories.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-10 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-2xl border bg-muted/60 p-12 text-center">
+          <p className="text-[15px] text-muted-foreground">
             You don&apos;t have any categories yet.
           </p>
-          <Button onClick={openCreate} className="mt-4">
+          <Button onClick={openCreate} className="mt-5 rounded-full px-5">
             <PlusIcon />
             Create your first category
           </Button>
@@ -82,7 +84,7 @@ export function CategoryManager({
           {categories.map((category) => (
             <li
               key={category.id}
-              className="flex items-center gap-3 rounded-lg border bg-card p-3"
+              className="flex items-center gap-3 rounded-xl border bg-card p-3.5 transition-shadow hover:shadow-notion"
             >
               <span
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg"
@@ -96,7 +98,7 @@ export function CategoryManager({
                 <div className="flex items-center gap-2">
                   <p className="truncate font-medium">{category.name}</p>
                   {category.isDefault && (
-                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
+                    <span className="rounded-full border bg-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
                       default
                     </span>
                   )}
@@ -198,7 +200,7 @@ function CategoryFormDialog({
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit category" : "New category"}</DialogTitle>
           <DialogDescription>
-            Pick a name, colour and icon. A monthly budget is optional.
+            Pick a name, colour and icon. Budgets are set on the Budgets page.
           </DialogDescription>
         </DialogHeader>
 
@@ -261,20 +263,6 @@ function CategoryFormDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="monthlyLimit">Monthly budget limit (€)</Label>
-            <Input
-              id="monthlyLimit"
-              name="monthlyLimit"
-              type="number"
-              min="0"
-              step="0.01"
-              inputMode="decimal"
-              defaultValue={category?.monthlyLimit ?? ""}
-              placeholder="Optional, e.g. 400"
-            />
-          </div>
-
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <DialogFooter>
@@ -286,7 +274,7 @@ function CategoryFormDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="rounded-full px-5">
               {isPending ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
@@ -366,6 +354,7 @@ function DeleteCategoryDialog({
             variant="destructive"
             onClick={handleDelete}
             disabled={isPending}
+            className="rounded-full px-5"
           >
             {isPending ? "Deleting…" : "Delete"}
           </Button>

@@ -4,31 +4,32 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    /* Notion design language — warm paper canvas, near-black ink, one confident blue. */
+    --background: 30 10% 96%; /* canvas-soft #f6f5f4 — the signature warm page canvas */
+    --foreground: 24 10% 10%; /* ink — soft near-black */
+    --card: 0 0% 100%; /* surface — white cards on the warm canvas */
+    --card-foreground: 24 10% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --popover-foreground: 24 10% 10%;
+    --primary: 208 100% 44%; /* Notion blue #0075de — the single structural accent */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 30 8% 94%;
+    --secondary-foreground: 24 10% 10%;
+    --muted: 30 9% 95%;
+    --muted-foreground: 30 5% 37%; /* ink-muted #615d59 */
+    --accent: 30 9% 94%;
+    --accent-foreground: 24 10% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%; /* hairline #e6e6e6 */
+    --input: 0 0% 87%;
+    --ring: 208 100% 44%; /* Notion blue focus signal */
+    --chart-1: 208 100% 44%;
+    --chart-2: 173 57% 39%;
+    --chart-3: 277 64% 84%;
+    --chart-4: 27 100% 43%;
+    --chart-5: 133 74% 39%;
+    --radius: 0.75rem; /* friendly 12px feature-card corners */
   }
 
   .dark {
@@ -65,5 +66,18 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Lining numerals + localized forms, matching Notion's Inter tuning. */
+    font-feature-settings: "lnum" 1, "locl" 1;
+  }
+}
+
+@layer utilities {
+  /* Notion elevation — barely-there, built from many near-transparent layers. */
+  .shadow-notion {
+    box-shadow:
+      rgba(0, 0, 0, 0.01) 0 0.175px 1.041px,
+      rgba(0, 0, 0, 0.02) 0 0.8px 2.925px,
+      rgba(0, 0, 0, 0.027) 0 2.025px 7.847px,
+      rgba(0, 0, 0, 0.04) 0 4px 18px;
   }
 }

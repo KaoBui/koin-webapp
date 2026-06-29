@@ -147,10 +147,10 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <div className="space-y-6 p-6 lg:p-8">
+    <div className="mx-auto max-w-6xl space-y-6 p-6 lg:p-10">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-3xl font-bold tracking-[-0.02em]">Dashboard</h1>
+        <p className="mt-1 text-[15px] text-muted-foreground">
           {formatMonthLabel(thisMonth)}
         </p>
       </div>
@@ -199,13 +199,14 @@ function StatCard({
   return (
     <Card>
       <div className="p-5">
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
         <p
           className={cn(
-            "mt-1 text-2xl font-semibold tabular-nums",
-            tone === "income" && "text-green-600",
-            tone === "expense" && "text-red-600",
-            negative && "text-red-600",
+            "mt-1.5 text-2xl font-bold tabular-nums tracking-[-0.01em]",
+            tone === "income" && "text-[#1aae39]",
+            negative && "text-[#e5484d]",
           )}
         >
           {eur.format(value)}
@@ -260,11 +261,7 @@ function RecentTransactions({ recent }: { recent: RecentTx[] }) {
                   <span
                     className={cn(
                       "w-24 text-right font-medium tabular-nums",
-                      t.type === "INCOME"
-                        ? "text-green-600"
-                        : t.type === "EXPENSE"
-                          ? "text-red-600"
-                          : "",
+                      t.type === "INCOME" && "text-[#1aae39]",
                     )}
                   >
                     {t.type === "INCOME" ? "+" : t.type === "EXPENSE" ? "-" : ""}
