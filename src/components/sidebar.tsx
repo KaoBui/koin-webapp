@@ -36,7 +36,7 @@ export function Sidebar({
           className="h-2.5 w-2.5 rounded-full bg-primary"
           aria-hidden
         />
-        Finance
+        Koin
       </div>
 
       <nav className="flex-1 space-y-0.5 px-3">
@@ -99,6 +99,15 @@ export function Sidebar({
         </p>
         {children}
         <ResetAccountButton />
+        <p className="px-2 pt-3 text-xs text-muted-foreground">
+          <Link href="/terms" className="hover:text-foreground">
+            Terms
+          </Link>
+          <span className="mx-1.5">·</span>
+          <Link href="/privacy" className="hover:text-foreground">
+            Privacy
+          </Link>
+        </p>
       </div>
     </aside>
   );

@@ -6,7 +6,7 @@ import { authConfig, isAllowedEmail } from "@/auth.config";
 const { auth } = NextAuth(authConfig);
 
 // Paths reachable without an authenticated session.
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/terms", "/privacy"];
 
 export default auth((req) => {
   const { nextUrl } = req;
@@ -18,8 +18,9 @@ export default auth((req) => {
   );
 
   if (isPublic) {
-    // Already authenticated + whitelisted users shouldn't sit on /login.
-    if (isLoggedIn && isAllowed) {
+    // Already authenticated + whitelisted users shouldn't sit on /login,
+    // but should still be able to read /terms and /privacy.
+    if (isLoggedIn && isAllowed && nextUrl.pathname === "/login") {
       return Response.redirect(new URL("/", nextUrl));
     }
     return; // allow access to the public page

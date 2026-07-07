@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth, signIn } from "@/auth";
@@ -34,6 +35,16 @@ export default async function LoginPage() {
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           Access is invite-only — only whitelisted email addresses can sign in.
+        </p>
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          <Link href="/terms" className="hover:text-foreground">
+            Terms
+          </Link>
+          <span className="mx-2">·</span>
+          <Link href="/privacy" className="hover:text-foreground">
+            Privacy
+          </Link>
         </p>
       </div>
     </main>

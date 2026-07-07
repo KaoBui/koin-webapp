@@ -16,7 +16,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Finance App",
+  title: "Koin",
   description: "Invite-only personal finance tracker",
 };
 
