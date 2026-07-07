@@ -111,6 +111,14 @@ enum BudgetPeriod {
   YEARLY
 }
 
+// Review state for a bank-synced transaction. REJECTED rows are kept as hidden
+// tombstones (never shown in Review) so a discarded transaction is never
+// re-staged by a later sync.
+enum PendingStatus {
+  PENDING
+  REJECTED
+}
+
 /// A user's financial account (named `FinancialAccount` to avoid colliding with
 /// the Auth.js `Account` model above). This is your spec's "Account" model.
 model FinancialAccount {
@@ -174,6 +182,7 @@ model PendingTransaction {
   date        DateTime
   externalId  String
   aspspName   String
+  status      PendingStatus   @default(PENDING)
   createdAt   DateTime        @default(now())
 
   user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -14,7 +14,9 @@ export default async function AppLayout({
   if (!session?.user) redirect("/login");
 
   const pendingCount = session.user.id
-    ? await prisma.pendingTransaction.count({ where: { userId: session.user.id } })
+    ? await prisma.pendingTransaction.count({
+        where: { userId: session.user.id, status: "PENDING" },
+      })
     : 0;
 
   return (

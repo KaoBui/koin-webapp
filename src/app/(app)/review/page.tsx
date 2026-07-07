@@ -12,7 +12,7 @@ export default async function ReviewPage() {
 
   const [pending, categories] = await Promise.all([
     prisma.pendingTransaction.findMany({
-      where: { userId },
+      where: { userId, status: "PENDING" },
       orderBy: { date: "desc" },
       include: { account: { select: { name: true } } },
     }),

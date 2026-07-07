@@ -88,15 +88,25 @@ export const resolvePending = action(
       if (merchantKey && categoryId) merchantRules.set(merchantKey, categoryId);
     }
 
-    const toDelete = [...approvedIds, ...reject.filter((id) => byId.has(id))];
+    const rejectIds = reject.filter((id) => byId.has(id));
 
     await prisma.$transaction(async (tx) => {
       if (data.length > 0) {
         await tx.transaction.createMany({ data, skipDuplicates: true });
       }
-      if (toDelete.length > 0) {
+      // Approved rows have moved to the ledger (their externalId now dedups
+      // against Transaction), so they can leave the queue entirely.
+      if (approvedIds.length > 0) {
         await tx.pendingTransaction.deleteMany({
-          where: { id: { in: toDelete }, userId },
+          where: { id: { in: approvedIds }, userId },
+        });
+      }
+      // Rejected rows stay as hidden REJECTED tombstones so their externalId
+      // keeps blocking a future sync from re-staging them.
+      if (rejectIds.length > 0) {
+        await tx.pendingTransaction.updateMany({
+          where: { id: { in: rejectIds }, userId },
+          data: { status: "REJECTED" },
         });
       }
     });
