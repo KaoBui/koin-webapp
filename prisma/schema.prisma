@@ -34,11 +34,13 @@ model User {
   sessions Session[]
 
   // App relations (per-user data isolation hangs off these)
-  financialAccounts FinancialAccount[]
-  categories        Category[]
-  transactions      Transaction[]
-  budgets           Budget[]
-  merchantRules     MerchantRule[]
+  financialAccounts   FinancialAccount[]
+  categories          Category[]
+  transactions        Transaction[]
+  budgets             Budget[]
+  merchantRules       MerchantRule[]
+  bankConnections     BankConnection[]
+  pendingTransactions PendingTransaction[]
 
   @@map("users")
 }
@@ -121,11 +123,66 @@ model FinancialAccount {
   isDefault Boolean     @default(false)
   createdAt DateTime    @default(now())
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions        Transaction[]
+  bankConnection      BankConnection?
+  pendingTransactions PendingTransaction[]
 
   @@index([userId])
   @@map("financial_accounts")
+}
+
+/// Links one of the user's `FinancialAccount`s to a single bank account exposed
+/// via Enable Banking (PSD2 AIS). One row per linked bank account (per-account
+/// model). `sessionId`/`accountUid` are Enable Banking identifiers used to pull
+/// transactions; `validUntil` is when the user's bank consent expires and a
+/// re-authorization is required.
+model BankConnection {
+  id                 String    @id @default(cuid())
+  userId             String
+  financialAccountId String    @unique
+  aspspName          String
+  aspspCountry       String
+  sessionId          String
+  accountUid         String
+  validUntil         DateTime
+  lastSyncedAt       DateTime?
+  createdAt          DateTime  @default(now())
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  financialAccount FinancialAccount @relation(fields: [financialAccountId], references: [id], onDelete: Cascade)
+
+  // One connection per Enable Banking account per user — re-linking updates it.
+  @@unique([userId, accountUid])
+  @@index([userId])
+  @@map("bank_connections")
+}
+
+/// Staging area for bank-synced transactions awaiting the user's review. Rows
+/// here are NOT part of the ledger — the dashboard, balances and budgets never
+/// read this table. On approval a row is copied into `Transaction` and deleted
+/// from here; on rejection it's just deleted. `externalId` is the bank's stable
+/// transaction id, unique per user so a re-sync never re-stages the same item.
+model PendingTransaction {
+  id          String          @id @default(cuid())
+  userId      String
+  accountId   String
+  categoryId  String?
+  amount      Decimal         @db.Decimal(14, 2)
+  type        TransactionType
+  description String?
+  date        DateTime
+  externalId  String
+  aspspName   String
+  createdAt   DateTime        @default(now())
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account  FinancialAccount  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  category Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, externalId])
+  @@index([userId])
+  @@map("pending_transactions")
 }
 
 model Category {
@@ -136,10 +193,11 @@ model Category {
   icon      String?
   isDefault Boolean @default(false)
 
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions  Transaction[]
-  budgets       Budget[]
-  merchantRules MerchantRule[]
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions        Transaction[]
+  budgets             Budget[]
+  merchantRules       MerchantRule[]
+  pendingTransactions PendingTransaction[]
 
   // Unique per user so default categories can be upserted idempotently.
   @@unique([userId, name])
@@ -157,12 +215,18 @@ model Transaction {
   description  String?
   date         DateTime
   importSource String          @default("manual")
+  // For bank-synced rows: the bank's stable transaction id (Enable Banking
+  // `entry_reference`). Null for manual/AI entries. Unique per user so a
+  // re-sync never inserts the same bank transaction twice. (Postgres treats
+  // NULLs as distinct, so manual rows are unaffected.)
+  externalId   String?
   createdAt    DateTime        @default(now())
 
   user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   account  FinancialAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
   category Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
+  @@unique([userId, externalId])
   @@index([userId])
   @@index([accountId])
   @@index([categoryId])

@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/budgets", label: "Budgets" },
   { href: "/accounts", label: "Accounts" },
   { href: "/transactions", label: "Transactions" },
+  { href: "/review", label: "Review" },
   { href: "/import", label: "Import" },
   { href: "/categories", label: "Categories" },
 ];
@@ -19,9 +20,11 @@ const COMING_SOON: string[] = [];
 
 export function Sidebar({
   userEmail,
+  pendingCount = 0,
   children,
 }: {
   userEmail: string;
+  pendingCount?: number;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -61,6 +64,11 @@ export function Sidebar({
                 aria-hidden
               />
               {item.label}
+              {item.href === "/review" && pendingCount > 0 && (
+                <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
+                  {pendingCount}
+                </span>
+              )}
             </Link>
           );
         })}
