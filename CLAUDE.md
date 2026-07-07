@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Invite-only personal finance tracker for ~10 users (Google OAuth + email whitelist). Each user sees only their own data. **Performance at scale is explicitly a non-goal** — favor clarity over optimization. Stack: Next.js 14 (App Router) + TypeScript, Prisma v6 + Supabase Postgres, Auth.js v5, Tailwind v3.4 + shadcn/ui, Recharts, Anthropic API.
+Invite-only personal finance tracker for ~10 users (Google OAuth + email whitelist). Each user sees only their own data. **Performance at scale is explicitly a non-goal** — favor clarity over optimization. Stack: Next.js 14 (App Router) + TypeScript, Prisma v6 + Supabase Postgres, Auth.js v5, Tailwind v3.4 + shadcn/ui, Recharts, Anthropic API, Enable Banking (PSD2 open banking import).
 
 See `README.md` for first-time setup, environment variables, and Google OAuth configuration. See `finance-app-roadmap.md` for build history and planned work.
 
@@ -52,10 +52,23 @@ Note: **list/filter is NOT an action.** Filtering (e.g. transactions by month/ca
 - **`FinancialAccount`, not `Account`.** The Auth.js adapter requires a model literally named `Account` (OAuth links). The user's money account is `FinancialAccount`; `Transaction.accountId` → `FinancialAccount`.
 - **Amounts are always stored positive**; direction comes from the `type` enum.
 - **`TransactionType.TRANSFER` is reserved and NOT supported** by the UI or actions. `TRANSACTION_TYPES` in `src/lib/transaction-constants.ts` is the source of truth for supported types — gate on it.
-- `Transaction.importSource` distinguishes `"manual"` vs `"ai_import"`; defaults to `manual` on create and is preserved on edit.
+- `Transaction.importSource` distinguishes `"manual"`, `"ai_import"`, and `"bank_sync"` (Enable Banking); defaults to `manual` on create and is preserved on edit.
+- `Transaction.externalId` is the bank's stable transaction id (Enable Banking `entry_reference`, or a hash when absent); null for manual/AI rows. Unique per `(userId, externalId)` — this is the bank-sync dedup key. Postgres treats NULLs as distinct, so manual rows are unaffected.
 - `categoryId`/`accountId` are nullable on `Transaction` (supports unclassified AI imports; `onDelete: SetNull`).
 - **Account `balance` is opening balance only.** Current/derived balances come from `getAccountsWithBalances(userId)` in `src/lib/accounts.ts` — used by both the dashboard and accounts page.
 - All app models carry a `userId` FK; `Category` is unique per `(userId, name)` for idempotent seeding.
+
+## Bank sync (Enable Banking)
+
+Automatic transaction import via Enable Banking (PSD2 AIS, **read-only**). Synced transactions land in a review queue and enter the ledger **only after the user approves them** — nothing is auto-posted.
+
+- **The app authenticates with a signed JWT, not per-user OAuth.** `src/lib/enablebanking.ts` signs an RS256 JWT with the app's private key (via `jose`, already a transitive dep) for every API call; there is no per-user token. Per-user access is a `session_id` obtained after the user consents at their bank. Env vars: `ENABLE_BANKING_APP_ID`, `ENABLE_BANKING_PRIVATE_KEY` (the **base64-encoded** PKCS#8 PEM on one line — the client also accepts a raw or `\n`-escaped PEM), `ENABLE_BANKING_BASE_URL`, `ENABLE_BANKING_COUNTRY` (which country's banks the Accounts page lists; `FI` = sandbox Mock ASPSP).
+- **Flow:** Accounts → Connect (`connectBank` action → `startAuth`) → user consents at bank → `GET /api/banking/callback` (a **Route Handler, not an action** — the bank redirects a browser GET) verifies a CSRF `state` cookie, exchanges the code (`createSession`), and creates **one `FinancialAccount` per bank account** plus a `BankConnection`. Sync (`syncBank` action → `syncUser`/`syncConnection` in `src/lib/bank-sync.ts`) pages transactions into `PendingTransaction`. Review (`src/app/(app)/review/`, `resolvePending` action) lets the user edit/approve/discard; approved rows become `Transaction`s (`importSource: "bank_sync"`) and learn `MerchantRule`s the same way AI import does. Shared helpers live in `src/lib/banking.ts`.
+- **Only booked transactions import** (`status === "BOOK"`); pending bank entries are skipped because they can change or vanish.
+- **Discards are permanent.** Rejecting a pending row flips `PendingTransaction.status` to `REJECTED` (a hidden tombstone) instead of deleting it, so its `externalId` keeps blocking re-staging on later syncs. The Review page and the sidebar badge only ever show `status: PENDING`.
+- **Sync is manual by design** (a button on Accounts) — the user validates every batch. A daily cron (calling `syncUser` for all users) plus a consent-expiry reconnect nudge (`BankConnection.validUntil`, ~90 days) are the planned "make it automatic" step, **not yet built**.
+- **`bank-sync.ts` is deliberately session-free** (explicit args, no `auth()`) so a future cron can reuse it. Keep it that way.
+- **The sandbox Mock ASPSP starts empty** — you must paste synthetic transaction JSON during the consent flow or `GET /accounts/{id}/transactions` returns nothing. That is expected, not a bug. `scripts/eb-smoke.ts` verifies the JWT/key against the sandbox (`npx tsx scripts/eb-smoke.ts`).
 
 ## Other environment gotchas
 
