@@ -2,11 +2,17 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-import { currentMonthKey, eur, formatMonthLabel } from "@/lib/format";
+import { eur, formatMonthLabel } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DonutDatum } from "./dashboard-types";
 
-export function SpendingDonut({ data }: { data: DonutDatum[] }) {
+export function SpendingDonut({
+  data,
+  month,
+}: {
+  data: DonutDatum[];
+  month: string;
+}) {
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
@@ -14,7 +20,7 @@ export function SpendingDonut({ data }: { data: DonutDatum[] }) {
       <CardHeader>
         <CardTitle>Spending by category</CardTitle>
         <p className="text-sm text-muted-foreground">
-          {formatMonthLabel(currentMonthKey())}
+          {formatMonthLabel(month)}
         </p>
       </CardHeader>
       <CardContent>

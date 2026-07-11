@@ -3,20 +3,19 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { currentMonthKey, eur } from "@/lib/format";
+import { eur } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MonthSwitcher } from "./month-switcher";
 import type { BudgetItem, TxMini } from "./dashboard-types";
 
 export function BudgetProgress({
   transactions,
   budgets,
+  month,
 }: {
   transactions: TxMini[];
   budgets: BudgetItem[];
+  month: string;
 }) {
-  const [month, setMonth] = React.useState(currentMonthKey());
-
   const spent = React.useMemo(() => {
     const map = new Map<string, number>();
     for (const t of transactions) {
@@ -29,9 +28,8 @@ export function BudgetProgress({
 
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader>
         <CardTitle>Budgets</CardTitle>
-        <MonthSwitcher value={month} onChange={setMonth} />
       </CardHeader>
       <CardContent>
         {budgets.length === 0 ? (

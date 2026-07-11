@@ -11,9 +11,8 @@ import {
   YAxis,
 } from "recharts";
 
-import { currentMonthKey, eur } from "@/lib/format";
+import { eur } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MonthSwitcher } from "./month-switcher";
 import type { TxMini } from "./dashboard-types";
 
 function buildSeries(transactions: TxMini[], month: string) {
@@ -39,10 +38,11 @@ function buildSeries(transactions: TxMini[], month: string) {
 
 export function BalanceLineChart({
   transactions,
+  month,
 }: {
   transactions: TxMini[];
+  month: string;
 }) {
-  const [month, setMonth] = React.useState(currentMonthKey());
   const data = React.useMemo(
     () => buildSeries(transactions, month),
     [transactions, month],
@@ -50,9 +50,8 @@ export function BalanceLineChart({
 
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader>
         <CardTitle>Balance over time</CardTitle>
-        <MonthSwitcher value={month} onChange={setMonth} />
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={240}>

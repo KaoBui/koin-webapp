@@ -16,8 +16,9 @@
 | 6 | Build core features | ✅ Done |
 | 7 | Testing | 🔄 In progress |
 | 7.5 | Server Actions hardening | ✅ Done |
-| 8 | Deployment | ⏳ Upcoming |
-| 9 | Iterate | ⏳ Upcoming |
+| 8 | Deployment | ✅ Done |
+| 9 | Iterate | 🔄 In progress |
+| 10 | Automatic bank sync (Enable Banking) | 🔄 In progress |
 
 ---
 
@@ -253,6 +254,44 @@ Collect feedback from real users and improve the app over time.
 - More chart options or date range flexibility
 - Email notifications for budget overruns
 - Rename default "Income" category to "Salary" / "Revenue"
+
+---
+
+## Step 10 — Automatic bank sync (Enable Banking) 🔄
+
+Post-MVP feature: link a real bank and import transactions automatically instead of screenshotting statements. Uses Enable Banking (PSD2 AIS — **read-only** account information). Built and deployed to production against the Enable Banking **sandbox**; still to switch to a real (French) bank and add the daily cron.
+
+### 10.1 — API client + app auth ✅
+- `src/lib/enablebanking.ts` — signs an RS256 application JWT with the app's private key (via `jose`, already a transitive dep of Auth.js) and wraps the endpoints used: list banks (`/aspsps`), start consent (`/auth`), create session (`/sessions`), fetch transactions (`/accounts/{uid}/transactions`).
+- Env vars: `ENABLE_BANKING_APP_ID`, `ENABLE_BANKING_PRIVATE_KEY` (**base64-encoded** PKCS#8 PEM on one line — the client also accepts a raw or `\n`-escaped PEM; base64 avoids `.env` newline issues on Windows), `ENABLE_BANKING_BASE_URL`, `ENABLE_BANKING_COUNTRY` (which country's banks the Accounts page lists; `FI` = sandbox Mock ASPSP, `FR` for real French banks).
+- `scripts/eb-smoke.ts` verifies the key/JWT against the sandbox (`npx tsx scripts/eb-smoke.ts`).
+
+### 10.2 — Connect flow ✅
+- Accounts page gains a **Connect a bank** picker. `connectBank` action → `startAuth` returns the bank's consent URL; a CSRF `state` is stashed in an httpOnly cookie.
+- `GET /api/banking/callback` (a **Route Handler**, not a Server Action — the bank redirects a browser GET) verifies the `state` cookie, exchanges the code via `createSession`, and creates **one `FinancialAccount` per bank account** plus a `BankConnection` (stores `sessionId`, `accountUid`, aspsp, consent `validUntil`).
+
+### 10.3 — Sync + review-before-commit ✅
+- `syncBank` action → `syncUser`/`syncConnection` (`src/lib/bank-sync.ts`, deliberately **session-free** so a future cron can reuse it) pages the bank's transactions into a `PendingTransaction` **review queue** — nothing is auto-posted to the ledger.
+- Dedup on `Transaction.externalId` (the bank's `entry_reference`, or a hash when absent), unique per `(userId, externalId)` on both `Transaction` and `PendingTransaction`. Only **booked** transactions (`status === "BOOK"`) are imported.
+- `/review` page (mirrors the AI-import confirmation UI): edit date/amount/description/type/category, discard, then **Add N transactions**. `resolvePending` copies approved rows into `Transaction` (`importSource: "bank_sync"`) and learns `MerchantRule`s exactly like AI import. Sidebar **Review** nav item shows a pending-count badge.
+
+### 10.4 — Permanent discards ✅
+- `PendingTransaction.status` (`PENDING`/`REJECTED`). Discarding a row flips it to a hidden `REJECTED` tombstone instead of deleting it, so its `externalId` keeps blocking re-staging on later syncs. Review page + badge only show `PENDING`. (Fixes a bug where discarded transactions reappeared on the next sync.)
+
+**Key decisions:**
+- **Sync is manual** (a button on Accounts) by design — the user wants to validate every batch before anything hits the ledger. One extra click per visit is acceptable.
+- **Review-all**, not auto-add: every synced transaction waits in the queue; nothing enters the ledger without explicit approval.
+- **One `FinancialAccount` per linked bank account** (keeps balances/filtering per-account, matches the existing model).
+
+**Notes / gotchas:**
+- The Enable Banking **sandbox Mock ASPSP starts empty** — you paste synthetic transaction JSON during the consent flow or the transactions endpoint returns nothing. Not a bug.
+- Cost at ~10 users: Vercel/Supabase negligible; the cron would touch **no Anthropic tokens** (categorization is rule-based, not AI); the only real cost lever is Enable Banking's own per-user/connection plan tier.
+
+**Still to do:**
+- Switch to Enable Banking **production mode** + a real French bank (`ENABLE_BANKING_COUNTRY=FR`) — requires their onboarding/verification.
+- **Daily cron** (`syncUser` for all users) so sync becomes automatic — deferred by choice, not cancelled.
+- **Consent-expiry reconnect nudge** (`BankConnection.validUntil`, ~90 days).
+- Bulk-select / filters on `/review` for when a queue accumulates after a long gap.
 
 ---
 

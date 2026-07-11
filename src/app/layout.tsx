@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -27,15 +26,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <Script
-          src="https://cdn.weglot.com/weglot.min.js"
-          strategy="beforeInteractive"
-        />
-        <Script id="weglot-init" strategy="beforeInteractive">
-          {`Weglot.initialize({ api_key: 'wg_a376ab5cdc3bbbbd17b97ca80eb931025' });`}
-        </Script>
-      </head>
       <body
         className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
       >

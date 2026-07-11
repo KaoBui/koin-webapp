@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowDown, ArrowUp } from "lucide-react";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -9,13 +10,14 @@ import {
   currentMonthKey,
   eur,
   formatDate,
-  formatMonthLabel,
   formatShortMonth,
   monthRange,
   pad2,
+  shiftMonth,
 } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+import { MonthPicker } from "./month-picker";
 import { IncomeExpenseBar } from "./income-expense-bar";
 import { SpendingDonut } from "./spending-donut";
 import { BalanceLineChart } from "./balance-line-chart";
@@ -28,7 +30,17 @@ import type {
   TxMini,
 } from "./dashboard-types";
 
-export default async function DashboardPage() {
+// Accept a YYYY-MM search param; fall back to the current month otherwise.
+function resolveMonth(raw: string | string[] | undefined): string {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return value && /^\d{4}-\d{2}$/.test(value) ? value : currentMonthKey();
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { month?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   const userId = session.user.id;
@@ -45,6 +57,7 @@ export default async function DashboardPage() {
         type: true,
         description: true,
         categoryId: true,
+        accountId: true,
         category: { select: { name: true, color: true, icon: true } },
       },
     }),
@@ -58,21 +71,44 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  const netWorth = accounts.reduce((sum, a) => sum + a.computedBalance, 0);
+  // --- Selected-month summary, with last-month comparison --------------------
+  // The month picker (URL `?month=`) sets the context for the whole page.
+  const selectedMonth = resolveMonth(searchParams?.month);
+  const prevMonth = shiftMonth(selectedMonth, -1);
+  const { start, end } = monthRange(selectedMonth);
+  const { start: prevStart } = monthRange(prevMonth); // prev end === start
 
-  // --- Current-month summary -------------------------------------------------
-  const thisMonth = currentMonthKey();
-  const { start, end } = monthRange(thisMonth);
+  const openingTotal = accounts.reduce((sum, a) => sum + a.openingBalance, 0);
+
   let income = 0;
   let expense = 0;
+  let prevIncome = 0;
+  let prevExpense = 0;
+  // Accounted cash flow (only transactions tied to an account count toward net
+  // worth, matching getAccountsWithBalances) accumulated up to each cutoff.
+  let flowBeforeEnd = 0; // → net worth at end of selected month
+  let flowBeforeStart = 0; // → net worth at end of previous month
   for (const t of transactions) {
+    const amt = t.amount.toNumber();
+    const signed = t.type === "INCOME" ? amt : t.type === "EXPENSE" ? -amt : 0;
+
     if (t.date >= start && t.date < end) {
-      const amt = t.amount.toNumber();
       if (t.type === "INCOME") income += amt;
       else if (t.type === "EXPENSE") expense += amt;
+    } else if (t.date >= prevStart && t.date < start) {
+      if (t.type === "INCOME") prevIncome += amt;
+      else if (t.type === "EXPENSE") prevExpense += amt;
+    }
+
+    if (t.accountId) {
+      if (t.date < end) flowBeforeEnd += signed;
+      if (t.date < start) flowBeforeStart += signed;
     }
   }
   const net = income - expense;
+  const prevNet = prevIncome - prevExpense;
+  const netWorth = openingTotal + flowBeforeEnd;
+  const prevNetWorth = openingTotal + flowBeforeStart;
 
   // --- Bar series: trailing 12 months ---------------------------------------
   const now = new Date();
@@ -98,7 +134,7 @@ export default async function DashboardPage() {
     else if (t.type === "EXPENSE") datum.expense += amt;
   }
 
-  // --- Donut: current-month expenses by category ----------------------------
+  // --- Donut: selected-month expenses by category ---------------------------
   const donutMap = new Map<string, DonutDatum>();
   for (const t of transactions) {
     if (t.type !== "EXPENSE") continue;
@@ -148,21 +184,40 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 lg:p-10">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-[-0.02em]">Dashboard</h1>
-        <p className="mt-1 text-[15px] text-muted-foreground">
-          {formatMonthLabel(thisMonth)}
-        </p>
+        <MonthPicker month={selectedMonth} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total income" value={income} tone="income" />
-        <StatCard label="Total expenses" value={expense} tone="expense" />
-        <StatCard label="Net balance" value={net} negative={net < 0} />
+        <StatCard
+          label="Total income"
+          value={income}
+          previous={prevIncome}
+          tone="income"
+          goodWhenUp
+        />
+        <StatCard
+          label="Total expenses"
+          value={expense}
+          previous={prevExpense}
+          tone="expense"
+          goodWhenUp={false}
+        />
+        <StatCard
+          label="Net balance"
+          value={net}
+          previous={prevNet}
+          negative={net < 0}
+          goodWhenUp
+        />
         <StatCard
           label="Total net worth"
           value={netWorth}
+          previous={prevNetWorth}
           negative={netWorth < 0}
+          goodWhenUp
+          deltaMode="delta"
         />
       </div>
 
@@ -170,14 +225,18 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2">
           <IncomeExpenseBar series={barSeries} />
         </div>
-        <SpendingDonut data={donutData} />
+        <SpendingDonut data={donutData} month={selectedMonth} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <BalanceLineChart transactions={txMini} />
+          <BalanceLineChart transactions={txMini} month={selectedMonth} />
         </div>
-        <BudgetProgress transactions={txMini} budgets={budgetItems} />
+        <BudgetProgress
+          transactions={txMini}
+          budgets={budgetItems}
+          month={selectedMonth}
+        />
       </div>
 
       <RecentTransactions recent={recent} />
@@ -188,13 +247,20 @@ export default async function DashboardPage() {
 function StatCard({
   label,
   value,
+  previous,
   negative,
   tone,
+  goodWhenUp = true,
+  deltaMode = "compare",
 }: {
   label: string;
   value: number;
+  previous: number;
   negative?: boolean;
   tone?: "income" | "expense";
+  goodWhenUp?: boolean;
+  // "compare": show the delta + % vs last month; "delta": absolute change only.
+  deltaMode?: "compare" | "delta";
 }) {
   return (
     <Card>
@@ -211,8 +277,60 @@ function StatCard({
         >
           {eur.format(value)}
         </p>
+        <Comparison
+          value={value}
+          previous={previous}
+          goodWhenUp={goodWhenUp}
+          showPercent={deltaMode === "compare"}
+        />
       </div>
     </Card>
+  );
+}
+
+// Small "vs last month" line beneath a stat: a signed delta (currency, and an
+// optional percentage) coloured by whether the move is favourable.
+function Comparison({
+  value,
+  previous,
+  goodWhenUp,
+  showPercent,
+}: {
+  value: number;
+  previous: number;
+  goodWhenUp: boolean;
+  showPercent: boolean;
+}) {
+  const diff = Math.round((value - previous) * 100) / 100;
+
+  if (diff === 0) {
+    return (
+      <p className="mt-2 text-xs text-muted-foreground">No change vs last month</p>
+    );
+  }
+
+  const up = diff > 0;
+  const good = up === goodWhenUp;
+  const Arrow = up ? ArrowUp : ArrowDown;
+  const pct =
+    showPercent && previous !== 0
+      ? Math.round((diff / Math.abs(previous)) * 100)
+      : null;
+
+  return (
+    <p className="mt-2 flex items-center gap-1 text-xs">
+      <span
+        className={cn(
+          "inline-flex items-center gap-0.5 font-medium tabular-nums",
+          good ? "text-[#1aae39]" : "text-[#e5484d]",
+        )}
+      >
+        <Arrow className="h-3 w-3" />
+        {eur.format(Math.abs(diff))}
+        {pct !== null && ` (${Math.abs(pct)}%)`}
+      </span>
+      <span className="text-muted-foreground">vs last month</span>
+    </p>
   );
 }
 
